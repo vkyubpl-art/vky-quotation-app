@@ -1307,13 +1307,6 @@ function handleData(res) {
       window.open(`https://wa.me/?text=` + encodeURIComponent(text), '_blank');
     }
     
-    // यह कोड मोबाइल पर खुलते ही लेआउट को स्क्रीन के हिसाब से बिल्कुल फिट कर देगा
-    window.addEventListener('DOMContentLoaded', (event) => {
-      let viewportMeta = document.querySelector('meta[name="viewport"]');
-      if (viewportMeta) {
-        viewportMeta.content = "width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=yes";
-      }
-    });
   </script>
 </body>
 </html>
