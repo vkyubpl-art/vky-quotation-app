@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VKY Quotation System</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 0; width: 100vw; overflow-x: hidden; }
+   .container { width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 12px !important; background: #fff; }
+    h2 { color: #2c3e50; text-align: center; font-size: 24px; margin-top: 5px; }
+    .form-group { margin-bottom: 15px; width: 100%; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; color: #333; font-size: 15px; }
+    select, input, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px !important; background: #fff; }
+    button { background: #27ae60; color: white; padding: 14px; border: none; border-radius: 4px; width: 100%; font-size: 16px; cursor: pointer; margin-top: 10px; font-weight: bold; }
+    button:hover { background: #219653; }
+    button:disabled { background: #95a5a6 !important; cursor: not-allowed; }
+    .add-btn { background: #3498db; }
+    .add-btn:hover { background: #2980b9; }
+    .order-btn { background: #e67e22; }
+    .order-btn:hover { background: #d35400; }
+    .delete-btn { background: #e74c3c !important; }
+    .delete-btn:hover { background: #c0392b !important; }
+    
+    .search-box { background: #f8f9fa; padding: 12px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 20px; }
+    #search-results, #order-search-results { margin-top: 10px; }
+    .result-item { background: #fff; border: 1px solid #ddd; padding: 10px; margin-bottom: 5px; border-radius: 4px; font-size: 14px; display: flex; flex-direction: column; gap: 8px; align-items: stretch; }
+
+    table.product-table, table.q-table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 15px; }
+    table.product-table th, table.product-table td, table.q-table th, table.q-table td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 14px; }
+    table.product-table th, table.q-table th { background: #f8f9fa; }
+    
+    #result-box, #order-section { margin-top: 20px; padding: 12px; background: #e8f8f5; border: 1px solid #a3e4d7; border-radius: 4px; display: none; }
+    #order-section { background: #fef9e7; border-color: #f39c12; }
+    
+    .quotation-card, .order-card { background: #fff; border: 2px solid #27ae60; border-radius: 8px; padding: 15px; margin-top: 10px; color: #333; width: 100%; overflow-x: auto; }
+    .order-card { border-color: #e67e22; }
+    .q-header { text-align: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
+    .q-header h3 { margin: 0; color: #2c3e50; font-size: 20px; }
+    .q-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; font-size: 15px; }
+    .q-section-title { font-weight: bold; color: #27ae60; margin-top: 15px; margin-bottom: 5px; border-bottom: 1px dashed #ddd; padding-bottom: 3px; font-size: 16px; }
+    .order-card .q-section-title { color: #e67e22; }
+
+    .incentive-card { background: #fff9c4; border: 1px solid #fbc02d; padding: 12px; border-radius: 6px; margin-top: 10px; margin-bottom: 15px; font-size: 13px; color: #333; display: none; }
+    .slab-row { display: flex; justify-content: space-between; margin-bottom: 4px; padding-bottom: 3px; border-bottom: 1px solid #ffe082; }
+    .highlight { color: #d32f2f; font-weight: bold; }
+
+    .total-incentive-box { background: #e8f8f5; border: 2px dashed #27ae60; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-size: 14px; color: #2c3e50; text-align: center; font-weight: bold; }
+
+    @media screen and (min-width: 768px) {
+      body { padding: 20px; background: #f4f6f9; }
+      .container { max-width: 650px !important; margin: auto !important; border-radius: 8px !important; box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important; padding: 20px !important; }
+      .q-row { flex-direction: row; justify-content: space-between; }
+      .result-item { flex-direction: row; justify-content: space-between; align-items: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>Vasundhara Krishi Yantra</h2>
+
+    <!-- 1️⃣ सर्च ओल्ड कोटेशन -->
+    <div class="search-box">
+      <h3 style="margin-top:0; font-size: 16px; color: #2c3e50;">🔍 Search Old Quotations</h3>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <input type="text" id="search_query" placeholder="Enter Name, Mobile, GSTIN or Product..." style="margin:0;">
+        <button class="add-btn" type="button" onclick="performSearch()" style="margin:0; width: 100%; padding: 12px;">Search Quotation</button>
+      </div>
+      <div id="search-results"></div>
+    </div>
+
+    <!-- 2️⃣ सर्च ओल्ड प्रोडक्शन आर्डर -->
+    <div class="search-box" style="background: #fef9e7; border-color: #f39c12;">
+      <h3 style="margin-top:0; font-size: 16px; color: #e67e22;">🔍 Search Old Production Orders</h3>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <input type="text" id="order_search_query" placeholder="Enter Order ID, Name, Mobile or GSTIN..." style="margin:0;">
+        <button class="order-btn" type="button" onclick="performOrderSearch()" style="margin:0; width: 100%; padding: 12px;">Search Order</button>
+      </div>
+      <div id="order-search-results"></div>
+    </div>
+
+    <!-- मुख्य फॉर्म -->
+    <form id="quoteForm" onsubmit="handleFormSubmit(event)">
+      
+      <div class="form-group">
+        <label>Select Salesperson:</label>
+        <select id="salesperson" onchange="updateSalespersonInfo()" required>
+          <option value="">-- Connecting to Database... --</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Salesperson Mobile Number:</label>
+        <input type="text" id="salesperson_mobile" readonly style="background: #e9ecef;" placeholder="Auto-filled">
+      </div>
+
+      <div class="form-group">
+        <label>Salesperson Email ID:</label>
+        <input type="text" id="salesperson_email" readonly style="background: #e9ecef;" placeholder="Auto-filled">
+      </div>
+
+      <div class="form-group">
+        <label>Client Type:</label>
+        <select id="client_type" onchange="handleClientTypeChange()" required>
+          <option value="Customer">Customer (MRP)</option>
+          <option value="Dealer">Dealer (NDP)</option>
+        </select>
+      </div>
+
+      <div class="form-group" id="main_gstin_group" style="display: none;">
+        <label>Dealer GSTIN No:</label>
+        <input type="text" id="client_gstin" placeholder="Enter Dealer GSTIN Number">
+      </div>
+
+      <div class="form-group">
+        <label>Client Name:</label>
+        <input type="text" id="client_name" required placeholder="Enter client name">
+      </div>
+
+      <div class="form-group">
+        <label>Client Mobile Number:</label>
+        <input type="tel" id="client_mobile" required placeholder="10-digit mobile number" pattern="[0-9]{10}">
+      </div>
+
+      <div class="form-group">
+        <label>Client State:</label>
+        <select id="client_state" onchange="updateDistricts()" required>
+          <option value="">-- Select State --</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Client District:</label>
+        <select id="client_district" required>
+          <option value="">-- First Select State --</option>
+        </select>
+      </div>
+
+      <hr style="margin: 20px 0; border: 0; border-top: 1px solid #ddd;">
+      <h3 style="color: #2c3e50; font-size: 18px;">Product Selection & List</h3>
+
+      <div class="form-group">
+        <label>Main Category:</label>
+        <select id="main_category" onchange="updateSubCategories()">
+          <option value="">-- Select Main Category --</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Sub Category:</label>
+        <select id="sub_category" onchange="updateProducts()">
+          <option value="">-- First Select Main Category --</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Select Product:</label>
+        <select id="product_select" onchange="calculatePrice()">
+          <option value="">-- First Select Sub Category --</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Quantity:</label>
+        <input type="number" id="quantity" value="1" min="1" onchange="calculatePrice()">
+      </div>
+
+      <div class="form-group">
+        <label>Price (₹) [Editable - Max 5% Discount Allowed]:</label>
+        <input type="number" id="total_price" style="background: #fff; font-weight: bold;" placeholder="Enter or edit price" onchange="validateEditablePrice()">
+        <small id="price_error_msg" style="color: #e74c3c; display: none; font-weight: bold; margin-top: 4px;"></small>
+      </div>
+
+      <!-- इंसेंटिव गाइडेंस कार्ड -->
+      <div id="incentiveCard" class="incentive-card">
+        <div style="font-weight: bold; margin-bottom: 6px;">Current Status: <span id="current_inc_info" class="highlight">0.5% (₹ 0)</span></div>
+        <div class="slab-row"><span>Slab 0.5% (Min Limit -5%)</span> <span>₹ <span id="target_05">0</span></span></div>
+        <div class="slab-row"><span>Slab 1.0% (Base Price)</span> <span>₹ <span id="target_10">0</span></span></div>
+        <div class="slab-row"><span>Slab 1.5% (+5% Up)</span> <span>₹ <span id="target_15">0</span></span></div>
+        <div class="slab-row"><span>Slab 2.0% (+10% Up)</span> <span>₹ <span id="target_20">0</span></span></div>
+      </div>
+
+      <button type="button" class="add-btn" onclick="addProductToList()">+ Add Product to List</button>
+
+      <!-- कुल कोटेशन इंसेंटिव समरी बॉक्स -->
+      <div class="total-incentive-box" id="totalIncentiveBox" style="margin-top: 15px;">
+        🏆 Total Quotation Incentive: ₹ <span id="total_quotation_incentive">0.00</span>
+      </div>
+
+      <div style="overflow-x: auto; width: 100%;">
+        <table class="product-table" id="productTable">
+          <thead>
+            <tr>
+              <th>Product Name</th>
+              <th>Qty</th>
+              <th>Amount (₹)</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="4" style="text-align: center; color: #777;">No products added yet.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <button type="submit" id="submitBtn">Generate Quotation & Save</button>
+    </form>
+
+    <!-- कोटेशन कार्ड -->
+    <div id="result-box">
+      <div class="quotation-card" id="quotationCard">
+        <div class="q-header">
+          <h3>Vasundhara Krishi Yantra</h3>
+          <p style="margin: 2px 0 0 0; font-size: 13px; color: #666;">Quotation</p>
+        </div>
+        <div class="q-row">
+          <span><b>Quotation ID:</b> <span id="res_id"></span></span>
+          <span><b>Date:</b> <span id="res_date"></span></span>
+        </div>
+        
+        <div class="q-section-title">Salesperson Details</div>
+        <div class="q-row">
+          <span><b>Name:</b> <span id="res_sp_name"></span></span>
+          <span><b>Phone:</b> <span id="res_sp_phone"></span></span>
+        </div>
+        <div class="q-row">
+          <span><b>Email:</b> <span id="res_sp_email"></span></span>
+        </div>
+
+        <div class="q-section-title">Client Details</div>
+        <div class="q-row">
+          <span><b>Client Name:</b> <span id="res_client_name"></span></span>
+          <span><b>Type:</b> <span id="res_client_type"></span></span>
+        </div>
+        <div class="q-row" id="res_gstin_row" style="display:none;">
+          <span><b>GSTIN:</b> <span id="res_client_gstin"></span></span>
+        </div>
+        <div class="q-row">
+          <span><b>Mobile:</b> <span id="res_client_mobile"></span></span>
+          <span><b>Location:</b> <span id="res_client_location"></span></span>
+        </div>
+
+        <div class="q-section-title">Product Details</div>
+        <div style="overflow-x: auto; width: 100%;">
+          <table class="q-table" id="res_product_table">
+            <thead>
+              <tr>
+                <th>Product Name</th>
+                <th>Qty</th>
+                <th>Total Amount (₹)</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        
+        <div style="text-align: right; margin-top: 8px; font-size: 15px; font-weight: bold; color: #2c3e50;">
+          Grand Total: ₹ <span id="res_grand_total">0</span>
+        </div>
+
+        <div class="q-section-title">Terms & Conditions</div>
+        <div id="res_terms" style="font-size: 13px; margin: 5px 0 0 0; color: #555;"></div>
+      </div>
+
+      <button style="background: #25D366; margin-top: 15px;" onclick="shareOnWhatsApp()">Share Quotation on WhatsApp</button>
+      <button type="button" class="order-btn" onclick="showOrderFormSection()" style="margin-top: 10px;">Convert to Production Order Form</button>
+    </div>
+
+    <!-- प्रोडक्शन ऑर्डर फॉर्म -->
+    <div id="order-section">
+      <h3 style="color: #e67e22; text-align: center; margin-top:0; font-size: 20px;">Production Order Details</h3>
+      <input type="hidden" id="editing_order_id" value="">
+      <form id="prodOrderForm" onsubmit="generateProductionOrder(event)">
+        
+        <div class="form-group" id="order_gstin_group" style="display: none;">
+          <label>GSTIN No:</label>
+          <input type="text" id="order_gstin" placeholder="Dealer GSTIN Number">
+        </div>
+
+        <div class="form-group">
+          <label>Full Customer Address:</label>
+          <textarea id="order_address" rows="2" placeholder="Enter complete address (House No, Village/Street, Landmark)" required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>PIN Code (6 Digits):</label>
+          <input type="text" id="order_pincode" placeholder="e.g. 462001" maxlength="6" pattern="[0-9]{6}" required title="Please enter exactly 6 digits PIN code">
+        </div>
+
+        <div class="form-group">
+          <label>Tractor Model & RPM:</label>
+          <input type="text" id="order_tractor" placeholder="e.g. Kubota 55HP, 540 RPM" required>
+        </div>
+        <div class="form-group">
+          <label>Booking Date:</label>
+          <input type="date" id="order_booking_date" required>
+        </div>
+        <div class="form-group">
+          <label>Expected Date of Dispatch:</label>
+          <input type="date" id="order_dispatch_date" required>
+        </div>
+        
+        <div class="form-group">
+          <label>Advance Amount (₹):</label>
+          <input type="number" id="order_advance" placeholder="e.g. 5000" oninput="calculateRemainingAmount()" required>
+        </div>
+
+        <div class="form-group">
+          <label>Remaining / Balance Amount (₹):</label>
+          <input type="text" id="order_remaining" readonly style="background: #e9ecef; font-weight: bold; color: #c0392b;" placeholder="Auto-calculated">
+        </div>
+
+        <div class="form-group">
+          <label>Payment Date:</label>
+          <input type="date" id="order_payment_date" required>
+        </div>
+
+        <div class="form-group">
+          <label>Payment Mode / Bank:</label>
+          <select id="order_payment_mode" onchange="handlePaymentModeChange()" required>
+            <option value="">-- Select Payment Mode --</option>
+            <option value="ICICI">ICICI</option>
+            <option value="Axis">Axis</option>
+            <option value="Cash">Cash</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="other_payment_group" style="display: none;">
+          <label>Enter Other Payment Mode / Bank:</label>
+          <input type="text" id="order_other_payment" placeholder="e.g. SBI Bank / UPI ID">
+        </div>
+
+        <div class="form-group">
+          <label>Transport Name:</label>
+          <input type="text" id="order_transport" placeholder="e.g. Personal / Transport Name" required>
+        </div>
+        <div class="form-group">
+          <label>Freight Terms:</label>
+          <select id="order_freight">
+            <option value="To-Pay">To-Pay</option>
+            <option value="Paid">Paid</option>
+          </select>
+        </div>
+
+        <button type="submit" id="orderSubmitBtn" class="order-btn">Generate & Save Production Order</button>
+      </form>
+    </div>
+
+    <!-- फाइनल प्रोडक्शन ऑर्डर कार्ड -->
+    <div id="final-order-box" style="display:none; margin-top:20px;">
+      <div class="order-card" id="productionOrderCard">
+        <div class="q-header">
+          <h3>Vasundhara Krishi Yantra</h3>
+          <p style="margin: 2px 0 0 0; font-size: 13px; color: #666;">PRODUCTION ORDER FORM</p>
+        </div>
+        <div class="q-row">
+          <span><b>Order ID:</b> <span id="ord_id"></span></span>
+          <span><b>Booking Date:</b> <span id="ord_booking_date_res"></span></span>
+        </div>
+        <div class="q-row">
+          <span><b>Customer Name:</b> <span id="ord_client_name"></span></span>
+          <span id="ord_gstin_container" style="display:none;"><b>GSTIN:</b> <span id="ord_gstin_res"></span></span>
+        </div>
+        <div class="q-row">
+          <span><b>Address & PIN:</b> <span id="ord_address_res"></span> - PIN: <span id="ord_pincode_res"></span></span>
+        </div>
+        <div class="q-row">
+          <span><b>Mobile:</b> <span id="ord_mobile_res"></span></span>
+          <span><b>Salesperson:</b> <span id="ord_sp_res"></span></span>
+        </div>
+        <div class="q-row">
+          <span><b>Tractor & RPM:</b> <span id="ord_tractor_res"></span></span>
+          <span><b>Expected Dispatch:</b> <span id="ord_dispatch_res"></span></span>
+        </div>
+
+        <div class="q-section-title">Product & Tractor Details</div>
+        <div style="overflow-x: auto; width: 100%;">
+          <table class="q-table" id="ord_product_table">
+            <thead>
+              <tr>
+                <th>Product / Spare</th>
+                <th>Qty</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        
+        <div class="q-row" style="margin-top: 10px; font-weight: bold; background: #f8f9fa; padding: 8px;">
+          <span>Total Order Value: ₹ <span id="ord_total_val_res">0</span></span>
+          <span>Advance: ₹ <span id="ord_advance_res">0</span></span>
+          <span style="color: #c0392b;">Balance Due: ₹ <span id="ord_remaining_res">0</span></span>
+        </div>
+
+        <div class="q-section-title">Payment Details</div>
+        <div class="q-row">
+          <span><b>Payment Date:</b> <span id="ord_pay_date_res"></span></span>
+          <span><b>Bank / Mode:</b> <span id="ord_pay_mode_res"></span></span>
+        </div>
+
+        <div class="q-section-title">Transport Details</div>
+        <div class="q-row">
+          <span><b>Transport Name:</b> <span id="ord_transport_res"></span></span>
+          <span><b>Freight Terms:</b> <span id="ord_freight_res"></span></span>
+        </div>
+      </div>
+      <button style="background: #25D366; margin-top: 15px;" onclick="shareOrderOnWhatsApp()">Share Order Form on WhatsApp</button>
+    </div>
+
+  </div>
+
+  <script>
+    let globalData = { products: [], salespersons: [] };
+    let productsList = [];
+    let lastQuotationId = "";
+    let currentGrandTotal = 0;
+    let loadedClientGstin = "";
+    let baseCalculatedUnitPrice = 0;
+    let totalQuotationIncentiveAmount = 0;
+
+    const locationData = {
+      "Andhra Pradesh": ["Anantapur", "Chittoor", "East Godavari", "Guntur", "Kadapa", "Krishna", "Kurnool", "Prakasam", "Srikakulam", "Visakhapatnam", "Vizianagaram", "West Godavari", "YSR Kadapa"],
+      "Arunachal Pradesh": ["Anjaw", "Changlang", "Dibang Valley", "East Kameng", "East Siang", "Kamle", "Kra Daadi", "Kurung Kumey", "Lepa Rada", "Lohit", "Longding", "Lower Dibang Valley", "Lower Siang", "Lower Subansiri", "Namsai", "Pakke Kessang", "Papum Pare", "Shi Yomi", "Siang", "Tawang", "Tirap", "Upper Siang", "Upper Subansiri", "West Kameng", "West Siang"],
+      "Assam": ["Baksa", "Barpeta", "Biswanath", "Bongaigaon", "Cachar", "Charaideo", "Chirang", "Darrang", "Dhemaji", "Dhubri", "Dibrugarh", "Dima Hasao", "Goalpara", "Golaghat", "Hailakandi", "Hojai", "Jorhat", "Kamrup", "Kamrup Metropolitan", "Karbi Anglong", "Karimganj", "Kokrajhar", "Lakhimpur", "Majuli", "Morigaon", "Nagaon", "Nalbari", "Sivasagar", "Sonitpur", "South Salmara-Mankachar", "Tinsukia", "Udalguri", "West Karbi Anglong"],
+      "Bihar": ["Araria", "Arwal", "Aurangabad", "Banka", "Begusarai", "Bhagalpur", "Bhojpur", "Buxar", "Darbhanga", "East Champaran", "Gaya", "Gopalganj", "Jamui", "Jehanabad", "Kaimur", "Katihar", "Khagaria", "Kishanganj", "Lakhisarai", "Madhepura", "Madhubani", "Munger", "Muzaffarpur", "Nalanda", "Nawada", "Patna", "Purnia", "Rohtas", "Saharsa", "Samastipur", "Saran", "Sheikhpura", "Sheohar", "Sitamarhi", "Siwan", "Supaul", "Vaishali", "West Champaran"],
+      "Chhattisgarh": ["Balod", "Baloda Bazar", "Balrampur", "Bastar", "Bemetara", "Bijapur", "Bilaspur", "Dantewada", "Dhamtari", "Durg", "Gariaband", "Janjgir-Champa", "Jashpur", "Kanker", "Kawardha", "Kondagaon", "Korba", "Koriya", "Mahasamund", "Mungeli", "Narayanpur", "Raigarh", "Raipur", "Rajnandgaon", "Sukma", "Surajpur", "Surguja"],
+      "Goa": ["North Goa", "South Goa"],
+      "Gujarat": ["Ahmedabad", "Amreli", "Anand", "Aravalli", "Banaskantha", "Bharuch", "Bhavnagar", "Botad", "Chhota Udaipur", "Dahod", "Dang", "Devbhoomi Dwarka", "Gandhinagar", "Gir Somnath", "Jamnagar", "Junagadh", "Kheda", "Kutch", "Mahisagar", "Mehsana", "Morbi", "Narmada", "Navsari", "Panchmahal", "Patan", "Porbandar", "Rajkot", "Sabarkantha", "Surat", "Surendranagar", "Tapi", "Vadodara", "Valsad"],
+      "Haryana": ["Ambala", "Bhiwani", "Charkhi Dadri", "Faridabad", "Fatehabad", "Gurugram", "Hisar", "Jhajjar", "Jind", "Kaithal", "Karnal", "Kurukshetra", "Mahendragarh", "Nuh", "Palwal", "Panchkula", "Panipat", "Rewari", "Rohtak", "Sirsa", "Sonipat", "Yamunanagar"],
+      "Himachal Pradesh": ["Bilaspur", "Chamba", "Hamirpur", "Kangra", "Kinnaur", "Kullu", "Lahaul and Spiti", "Mandi", "Shimla", "Sirmaur", "Solan", "Una"],
+      "Jharkhand": ["Bokaro", "Chatra", "Deoghar", "Dhanbad", "Dumka", "East Singhbhum", "Garhwa", "Giridih", "Godda", "Gumla", "Hazaribagh", "Jamtara", "Khunti", "Koderma", "Latehar", "Lohardaga", "Pakur", "Palamu", "Ramgarh", "Ranchi", "Sahebganj", "Seraikela Kharsawan", "Simdega", "West Singhbhum"],
+      "Karnataka": ["Bagalkot", "Ballari", "Belagavi", "Bengaluru Rural", "Bengaluru Urban", "Bidar", "Chamarajanagar", "Chikkaballapura", "Chikkamagaluru", "Chitradurga", "Dakshina Kannada", "Davanagere", "Dharwad", "Gadag", "Hassan", "Haveri", "Kalaburagi", "Kodagu", "Kolar", "Koppal", "Mandya", "Mysuru", "Raichur", "Ramanagara", "Shivamogga", "Tumakuru", "Udupi", "Uttara Kannada", "Vijayapura", "Yadgir"],
+      "Kerala": ["Alappuzha", "Ernakulam", "Idukki", "Kannur", "Kasaragod", "Kollam", "Kottayam", "Kozhikode", "Malappuram", "Palakkad", "Pathanamthitta", "Thiruvananthapuram", "Thrissur", "Wayanad"],
+      "Madhya Pradesh": ["Agar Malwa", "Alirajpur", "Anuppur", "Ashoknagar", "Balaghat", "Barwani", "Betul", "Bhind", "Bhopal", "Burhanpur", "Chhatarpur", "Chhindwara", "Damoh", "Datia", "Dewas", "Dhar", "Dindori", "Guna", "Gwalior", "Harda", "Hoshangabad", "Indore", "Jabalpur", "Jhabua", "Katni", "Khandwa", "Khargone", "Mandla", "Mandsaur", "Morena", "Narsinghpur", "Neemuch", "Panna", "Raisen", "Rajgarh", "Ratlam", "Rewa", "Sagar", "Satna", "Sehore", "Seoni", "Shahdol", "Shajapur", "Sheopur", "Shivpuri", "Sidhi", "Singrauli", "Tikamgarh", "Ujjain", "Umaria", "Vidisha"],
+      "Maharashtra": ["Ahmednagar", "Akola", "Amravati", "Aurangabad", "Beed", "Bhandara", "Buldhana", "Chandrapur", "Dhule", "Gadchiroli", "Gondia", "Hingoli", "Jalgaon", "Jalna", "Kolhapur", "Latur", "Mumbai City", "Mumbai Suburban", "Nagpur", "Nanded", "Nandurbar", "Nashik", "Osmanabad", "Palghar", "Parbhani", "Pune", "Raigad", "Ratnagiri", "Sangli", "Satara", "Sindhudurg", "Solapur", "Thane", "Wardha", "Washim", "Yavatmal"],
+      "Manipur": ["Bishnupur", "Chandel", "Churachandpur", "Imphal East", "Imphal West", "Jiribam", "Kakching", "Kamjong", "Kangpokpi", "Noney", "Pherzawl", "Senapati", "Tamenglong", "Tengnoupal", "Thoubal", "Ukhrul"],
+      "Meghalaya": ["East Garo Hills", "East Jaintia Hills", "East Khasi Hills", "North Garo Hills", "Ri Bhoi", "South Garo Hills", "South West Garo Hills", "South West Khasi Hills", "West Garo Hills", "West Jaintia Hills", "West Khasi Hills"],
+      "Mizoram": ["Aizawl", "Champhai", "Kolasib", "Lawngtlai", "Lunglei", "Mamit", "Saiha", "Serchhip"],
+      "Nagaland": ["Dimapur", "Kiphire", "Kohima", "Longleng", "Mokokchung", "Mon", "Peren", "Phek", "Tuensang", "Wokha", "Zunheboto"],
+      "Odisha": ["Angul", "Balangir", "Balasore", "Bargarh", "Bhadrak", "Boudh", "Cuttack", "Deogarh", "Dhenkanal", "Gajapati", "Ganjam", "Jharsuguda", "Kalahandi", "Kandhamal", "Kendrapara", "Kendujhar", "Khordha", "Koraput", "Malkangiri", "Mayurbhanj", "Nabarangpur", "Nayagarh", "Nuapada", "Puri", "Rayagada", "Sambalpur", "Subarnapur", "Sundargarh"],
+      "Punjab": ["Amritsar", "Barnala", "Bathinda", "Faridkot", "Fatehgarh Sahib", "Fazilka", "Firozpur", "Gurdaspur", "Hoshiarpur", "Jalandhar", "Kapurthala", "Ludhiana", "Mansa", "Moga", "Mohali", "Muktsar", "Pathankot", "Patiala", "Rupnagar", "Sangrur", "Shaheed Bhagat Singh Nagar", "Tarn Taran"],
+      "Rajasthan": ["Ajmer", "Alwar", "Banswara", "Baran", "Barmer", "Bharatpur", "Bhilwara", "Bikaner", "Bundi", "Chittorgarh", "Churu", "Dausa", "Dholpur", "Dungarpur", "Ganganagar", "Hanumangarh", "Jaipur", "Jaisalmer", "Jalore", "Jhalawar", "Jhunjhunu", "Jodhpur", "Karauli", "Kota", "Nagaur", "Pali", "Pratapgarh", "Rajsamand", "Sawai Madhopur", "Sikar", "Sirohi", "Tonk", "Udaipur"],
+      "Sikkim": ["East Sikkim", "North Sikkim", "South Sikkim", "West Sikkim"],
+      "Tamil Nadu": ["Ariyalur", "Chengalpattu", "Chennai", "Coimbatore", "Cuddalore", "Dharmapuri", "Dindigul", "Erode", "Kallakurichi", "Kanchipuram", "Kanyakumari", "Karur", "Krishnagiri", "Madurai", "Nagapattinam", "Namakkal", "Nilgiris", "Perambalur", "Pudukkottai", "Ramanathapuram", "Ranipet", "Salem", "Sivaganga", "Tenkasi", "Thanjavur", "Theni", "Thoothukudi", "Tiruchirappalli", "Tirunelveli", "Tirupathur", "Tiruppur", "Tiruvallur", "Tiruvannamalai", "Tiruvarur", "Vellore", "Viluppuram", "Virudhunagar"],
+      "Telangana": ["Adilabad", "Bhadradri Kothagudem", "Hyderabad", "Jagtial", "Jangaon", "Jayashankar Bhupalpally", "Jogulamba Gadwal", "Kamareddy", "Karimnagar", "Khammam", "Kumuram Bheem", "Mahabubabad", "Mahabubnagar", "Mancherial", "Medak", "Medchal–Malkajgiri", "Mulugu", "Nagarkurnool", "Nalgonda", "Narayanpet", "Nirmal", "Nizamabad", "Peddapalli", "Rajanna Sircilla", "Ranga Reddy", "Sangareddy", "Siddipet", "Suryapet", "Vikarabad", "Wanaparthy", "Warangal Rural", "Warangal Urban", "Yadadri Bhuvanagiri"],
+      "Tripura": ["Dhalai", "Gomati", "Khowai", "North Tripura", "Sepahijala", "South Tripura", "Unakoti", "West Tripura"],
+      "Uttar Pradesh": ["Agra", "Aligarh", "Ambedkar Nagar", "Amethi", "Amroha", "Auraiya", "Ayodhya", "Azamgarh", "Badaun", "Baghpat", "Bahraich", "Ballia", "Balrampur", "Banda", "Barabanki", "Bareilly", "Basti", "Bhadohi", "Bijnor", "Bulandshahr", "Chandauli", "Chitrakoot", "Deoria", "Etah", "Etawah", "Farrukhabad", "Fatehpur", "Firozabad", "Gautam Buddha Nagar", "Ghaziabad", "Ghazipur", "Gonda", "Gorakhpur", "Hamirpur", "Hapur", "Hardoi", "Hathras", "Jalaun", "Jaunpur", "Kannauj", "Kanpur Dehat", "Kanpur Nagar", "Kasganj", "Kaushambi", "Kheri", "Kushinagar", "Lalitpur", "Lucknow", "Maharajganj", "Mahoba", "Mainpuri", "Mau", "Mirzapur", "Pilibhit", "Pratapgarh", "Raebareli", "Sambhal", "Sant Kabir Nagar", "Shamli", "Shravasti", "Siddharthnagar", "Sitapur", "Sonbhadra", "Unnao"],
+      "Uttarakhand": ["Dehradun", "Haridwar", "Roorkee", "Haldwani", "Rudrapur", "Kashipur", "Rishikesh", "Nainital", "Almora", "Pauri", "Tehri", "Pithoragarh", "Chamoli", "Uttarkashi"],
+      "West Bengal": ["Kolkata", "Howrah", "Durgapur", "Asansol", "Siliguri", "Bardhaman", "Malda", "Jalpaiguri", "Kharagpur", "Nadia", "Bankura", "Purulia", "Darjeeling", "Haldia", "Krishnanagar"],
+      "Delhi": ["New Delhi", "North Delhi", "South Delhi", "East Delhi", "West Delhi", "Central Delhi", "North-East Delhi", "North-West Delhi", "South-East Delhi", "South-West Delhi", "Shahdara"],
+      "Jammu and Kashmir": ["Anantnag", "Bandipora", "Baramulla", "Budgam", "Doda", "Ganderbal", "Jammu", "Kathua", "Kishtwar", "Kulgam", "Kupwara", "Poonch", "Pulwama", "Rajouri", "Ramban", "Reasi", "Samba", "Shopian", "Srinagar", "Udhampur"],
+      "Ladakh": ["Kargil", "Leh"],
+      "Other State": ["Other District"]
+    };
+
+    window.onload = function() {
+      let stateSelect = document.getElementById('client_state');
+      stateSelect.innerHTML = '<option value="">-- Select State --</option>';
+      Object.keys(locationData).sort().forEach(state => {
+        stateSelect.innerHTML += `<option value="${state}">${state}</option>`;
+      });
+      initAppWithRetry();
+    };
+
+    function initAppWithRetry() {
+    fetch('https://script.google.com/macros/s/AKfycbzzXHuRYztyLdKk-sGUKyE0rHTHbHLwmRQiFr93r0PmeF3ZTfFjdhas0StCkz1yFYz1/exec')
+        .then(response => response.text())
+        .then(resStr => {
+            if (!resStr || resStr.trim().startsWith("<")) {
+                setTimeout(initAppWithRetry, 3000);
+                return;
+            }
+            let res;
+            try {
+                res = JSON.parse(resStr);
+            } catch (e) {
+                setTimeout(initAppWithRetry, 3000);
+                return;
+            }
+            
+            if (!res || res.status !== "success") {
+                setTimeout(initAppWithRetry, 2000);
+                return;
+            }
+            globalData = res;
+            
+            let spSelect = document.getElementById('salesperson');
+            spSelect.innerHTML = '<option value="">-- Select Your Name --</option>';
+            if (res.salespersons && res.salespersons.length > 0) {
+                res.salespersons.forEach(sp => {
+                    let name = sp.Salesperson_Name || sp.Name || "";
+                    let num = sp.Salesperson_Number || sp.Phone || "";
+                    let email = sp.Salesperson_Email || sp.Email || "";
+                    if (name) {
+                        spSelect.innerHTML += `<option value="${name}" data-phone="${num}" data-email="${email}">${name}</option>`;
+                    }
+                });
+            }
+        })
+        .catch(err => {
+            console.error("Fetch error:", err);
+            setTimeout(initAppWithRetry, 3000);
+        });
+}
+          let res;
+          try {
+            res = JSON.parse(resStr);
+          } catch (e) {
+            setTimeout(initAppWithRetry, 3000);
+            return;
+          }
+
+          if (!res || res.status !== "success") {
+            setTimeout(initAppWithRetry, 2000);
+            return;
+          }
+          globalData = res;
+          
+          let spSelect = document.getElementById('salesperson');
+          spSelect.innerHTML = '<option value="">-- Select Your Name --</option>';
+          if(res.salespersons && res.salespersons.length > 0) {
+            res.salespersons.forEach(sp => {
+              let name = sp.Salesperson_Name || sp.Name || "";
+              let num = sp.Salesperson_Number || sp.Phone || "";
+              let email = sp.Salesperson_Email || sp.Email || "";
+              if(name) {
+                spSelect.innerHTML += `<option value="${name}" data-phone="${num}" data-email="${email}">${name}</option>`;
+              }
+            });
+          }
+
+          let mainCatSelect = document.getElementById('main_category');
+          mainCatSelect.innerHTML = '<option value="">-- Select Main Category --</option>';
+          let categories = [];
+          if(res.products && res.products.length > 0) {
+            res.products.forEach(p => {
+              let cat = p.Main_Category || p.MainCategory || "";
+              if(cat && !categories.includes(cat.toString().trim())) {
+                categories.push(cat.toString().trim());
+              }
+            });
+            categories.sort().forEach(cat => {
+              mainCatSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+            });
+          }
+        })
+        .withFailureHandler(function(err) {
+          setTimeout(initAppWithRetry, 2000);
+        })
+        .getAppData();
+    }
+
+    function updateSalespersonInfo() {
+      let spSelect = document.getElementById('salesperson');
+      let selectedOption = spSelect.options[spSelect.selectedIndex];
+      document.getElementById('salesperson_mobile').value = selectedOption.getAttribute('data-phone') || "";
+      document.getElementById('salesperson_email').value = selectedOption.getAttribute('data-email') || "";
+    }
+
+    function handleClientTypeChange() {
+      let clientType = document.getElementById('client_type').value;
+      let gstinGroup = document.getElementById('main_gstin_group');
+      let gstinInput = document.getElementById('client_gstin');
+
+      if (clientType === 'Dealer') {
+        gstinGroup.style.display = 'block';
+        gstinInput.required = true;
+      } else {
+        gstinGroup.style.display = 'none';
+        gstinInput.required = false;
+        gstinInput.value = "";
+      }
+      recalculateCurrentPrice();
+    }
+
+    function handlePaymentModeChange() {
+      let paymentMode = document.getElementById('order_payment_mode').value;
+      let otherGroup = document.getElementById('other_payment_group');
+      let otherInput = document.getElementById('order_other_payment');
+
+      if (paymentMode === 'Other') {
+        otherGroup.style.display = 'block';
+        otherInput.required = true;
+      } else {
+        otherGroup.style.display = 'none';
+        otherInput.required = false;
+        otherInput.value = "";
+      }
+    }
+
+    function calculateRemainingAmount() {
+      let advance = parseFloat(document.getElementById('order_advance').value) || 0;
+      let remaining = currentGrandTotal - advance;
+      if (remaining < 0) remaining = 0;
+      document.getElementById('order_remaining').value = remaining;
+    }
+
+    function updateDistricts() {
+      let selectedState = document.getElementById('client_state').value;
+      let distSelect = document.getElementById('client_district');
+      distSelect.innerHTML = '<option value="">-- Select District --</option>';
+      if(selectedState && locationData[selectedState]) {
+        locationData[selectedState].sort().forEach(dist => {
+          distSelect.innerHTML += `<option value="${dist}">${dist}</option>`;
+        });
+      }
+    }
+
+    function updateSubCategories() {
+      let selectedMainCat = document.getElementById('main_category').value;
+      let subCatSelect = document.getElementById('sub_category');
+      let prodSelect = document.getElementById('product_select');
+      subCatSelect.innerHTML = '<option value="">-- Select Sub Category --</option>';
+      prodSelect.innerHTML = '<option value="">-- First Select Sub Category --</option>';
+      document.getElementById('total_price').value = "";
+      document.getElementById('price_error_msg').style.display = 'none';
+      document.getElementById('incentiveCard').style.display = 'none';
+
+      if(selectedMainCat) {
+        let subCats = [];
+        globalData.products.forEach(p => {
+          let mCat = p.Main_Category || p.MainCategory || "";
+          let sCat = p.Sub_Category || p.SubCategory || "";
+          if(mCat.toString().trim() === selectedMainCat && sCat) {
+            let subName = sCat.toString().trim();
+            if(!subCats.includes(subName)) subCats.push(subName);
+          }
+        });
+        subCats.sort().forEach(subCat => {
+          subCatSelect.innerHTML += `<option value="${subCat}">${subCat}</option>`;
+        });
+      }
+    }
+
+    function updateProducts() {
+      let selectedMainCat = document.getElementById('main_category').value;
+      let selectedSubCat = document.getElementById('sub_category').value;
+      let prodSelect = document.getElementById('product_select');
+      prodSelect.innerHTML = '<option value="">-- Select Product --</option>';
+      document.getElementById('total_price').value = "";
+      document.getElementById('price_error_msg').style.display = 'none';
+      document.getElementById('incentiveCard').style.display = 'none';
+
+      if(selectedMainCat && selectedSubCat) {
+        globalData.products.forEach(p => {
+          let mCat = p.Main_Category || p.MainCategory || "";
+          let sCat = p.Sub_Category || p.SubCategory || "";
+          let pId = p.Product_ID || p.ProductID || "";
+          let pName = p.Product_Name || p.ProductName || "";
+          if(mCat.toString().trim() === selectedMainCat && sCat.toString().trim() === selectedSubCat && pId) {
+            prodSelect.innerHTML += `<option value="${pId}">${pName}</option>`;
+          }
+        });
+      }
+    }
+
+    function calculatePrice() {
+      let prodId = document.getElementById('product_select').value;
+      let clientType = document.getElementById('client_type').value;
+      let qty = parseInt(document.getElementById('quantity').value) || 1;
+      document.getElementById('price_error_msg').style.display = 'none';
+      document.getElementById('total_price').style.borderColor = "#ccc";
+
+      if (!prodId || !globalData.products) return;
+      let currentSelectedProduct = globalData.products.find(p => (p.Product_ID || p.ProductID) === prodId);
+      if (currentSelectedProduct) {
+        let unitPrice = (clientType === 'Dealer') ? parseFloat(currentSelectedProduct.NDP) : parseFloat(currentSelectedProduct.MRP);
+        if (isNaN(unitPrice)) unitPrice = 0;
+        baseCalculatedUnitPrice = unitPrice;
+        let totalBasePrice = unitPrice * qty;
+        document.getElementById('total_price').value = totalBasePrice;
+        updateIncentiveAndTargets(totalBasePrice);
+      }
+    }
+
+    function recalculateCurrentPrice() { calculatePrice(); }
+
+    function validateEditablePrice() {
+      let prodId = document.getElementById('product_select').value;
+      let priceInput = document.getElementById('total_price');
+      let errorMsg = document.getElementById('price_error_msg');
+      
+      if (!prodId || baseCalculatedUnitPrice <= 0) return;
+
+      let qty = parseInt(document.getElementById('quantity').value) || 1;
+      let enteredTotal = parseFloat(priceInput.value) || 0;
+      let baseTotal = baseCalculatedUnitPrice * qty;
+      let minAllowedPrice = baseTotal * 0.95;
+
+      if (enteredTotal < minAllowedPrice) {
+        priceInput.style.borderColor = "#e74c3c";
+        errorMsg.style.display = "block";
+        errorMsg.innerText = "⚠️ Minimum allowed price is ₹ " + minAllowedPrice.toFixed(2) + " (-5% limit)!";
+      } else {
+        priceInput.style.borderColor = "#27ae60";
+        errorMsg.style.display = "none";
+      }
+
+      updateIncentiveAndTargets(enteredTotal);
+    }
+
+    function updateIncentiveAndTargets(currentTotal) {
+      let qty = parseInt(document.getElementById('quantity').value) || 1;
+      let baseTotal = baseCalculatedUnitPrice * qty;
+      if (baseTotal <= 0) {
+        document.getElementById('incentiveCard').style.display = 'none';
+        return;
+      }
+
+      let diff = ((currentTotal - baseTotal) / baseTotal) * 100;
+      let incentivePercent = 0.5;
+
+      if (diff >= 0 && diff < 5) {
+        incentivePercent = 1.0;
+      } else if (diff >= 5 && diff < 10) {
+        incentivePercent = 1.5;
+      } else if (diff >= 10) {
+        incentivePercent = 2.0;
+      } else {
+        incentivePercent = 0.5;
+      }
+
+      let incentiveAmount = (currentTotal * incentivePercent) / 100;
+
+      document.getElementById('current_inc_info').innerText = `${incentivePercent}% (₹ ${incentiveAmount.toFixed(2)})`;
+      document.getElementById('target_05').innerText = (baseTotal * 0.95).toFixed(2);
+      document.getElementById('target_10').innerText = baseTotal.toFixed(2);
+      document.getElementById('target_15').innerText = (baseTotal * 1.05).toFixed(2);
+      document.getElementById('target_20').innerText = (baseTotal * 1.10).toFixed(2);
+
+      document.getElementById('incentiveCard').style.display = 'block';
+    }
+
+    function calculateItemIncentive(totalPrice, qty, unitPrice) {
+      let baseTotal = unitPrice * qty;
+      if (baseTotal <= 0) return 0;
+      let diff = ((totalPrice - baseTotal) / baseTotal) * 100;
+      let incentivePercent = 0.5;
+      if (diff >= 0 && diff < 5) {
+        incentivePercent = 1.0;
+      } else if (diff >= 5 && diff < 10) {
+        incentivePercent = 1.5;
+      } else if (diff >= 10) {
+        incentivePercent = 2.0;
+      } else {
+        incentivePercent = 0.5;
+      }
+      return (totalPrice * incentivePercent) / 100;
+    }
+
+    function updateTotalQuotationIncentiveUI() {
+      let totalInc = 0;
+      productsList.forEach(item => {
+        totalInc += (item.incentive_amount || 0);
+      });
+      totalQuotationIncentiveAmount = totalInc;
+      document.getElementById('total_quotation_incentive').innerText = totalInc.toFixed(2);
+    }
+
+    function addProductToList() {
+      let prodId = document.getElementById('product_select').value;
+      let qty = parseInt(document.getElementById('quantity').value) || 1;
+      let priceInput = document.getElementById('total_price');
+      let totalPrice = parseFloat(priceInput.value) || 0;
+      
+      if (!prodId) { alert("Please select a product first!"); return; }
+
+      let baseTotal = baseCalculatedUnitPrice * qty;
+      let minAllowedPrice = baseTotal * 0.95;
+      if (totalPrice < minAllowedPrice) {
+        alert("Cannot add! Price cannot go below -5% limit (Minimum: ₹ " + minAllowedPrice.toFixed(2) + ")");
+        priceInput.focus();
+        return;
+      }
+
+      let prodObj = globalData.products.find(p => (p.Product_ID || p.ProductID) === prodId);
+      let prodName = prodObj ? (prodObj.Product_Name || prodObj.ProductName) : prodId;
+
+      let itemInc = calculateItemIncentive(totalPrice, qty, baseCalculatedUnitPrice);
+
+      productsList.push({ 
+        product_id: prodId, 
+        product_name: prodName, 
+        quantity: qty, 
+        total_price: totalPrice,
+        incentive_amount: itemInc 
+      });
+
+      updateProductTableUI();
+      updateTotalQuotationIncentiveUI();
+
+      document.getElementById('product_select').value = "";
+      document.getElementById('quantity').value = "1";
+      priceInput.value = "";
+      priceInput.style.borderColor = "#ccc";
+      document.getElementById('price_error_msg').style.display = 'none';
+      document.getElementById('incentiveCard').style.display = 'none';
+    }
+
+    function updateProductTableUI() {
+      let tbody = document.querySelector("#productTable tbody");
+      tbody.innerHTML = "";
+      if (productsList.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #777;">No products added yet.</td></tr>`;
+        return;
+      }
+      productsList.forEach((item, index) => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${item.product_name}</td>
+            <td>${item.quantity}</td>
+            <td>₹ ${item.total_price}</td>
+            <td><button type="button" style="background: #e74c3c; padding: 6px 10px; font-size: 13px; margin:0; width:auto;" onclick="removeProduct(${index})">Remove</button></td>
+          </tr>`;
+      });
+    }
+
+    function removeProduct(index) { 
+      productsList.splice(index, 1); 
+      updateProductTableUI(); 
+      updateTotalQuotationIncentiveUI(); 
+    }
+
+    function performSearch() {
+      let query = document.getElementById('search_query').value;
+      if(!query) { alert("Please enter something to search!"); return; }
+      let container = document.getElementById('search-results');
+      container.innerHTML = "<div style='padding:5px; color:#555;'>Searching Quotations...</div>";
+      
+      google.script.run
+        .withSuccessHandler(function(resStr) {
+          let res = JSON.parse(resStr);
+          container.innerHTML = "";
+          if(!res.results || res.results.length === 0) {
+            container.innerHTML = "<div style='padding:5px; color:red;'>No matching quotation found.</div>";
+            return;
+          }
+          window.tempSearchResults = res.results;
+          res.results.forEach((q, index) => {
+            container.innerHTML += `
+              <div class="result-item">
+                <div><b>ID:</b> ${q.quotation_id} | <b>Name:</b> ${q.client_name} (${q.client_mobile})</div>
+                <div style="display: flex; gap: 8px;">
+                  <button type="button" class="add-btn" onclick='handleSearchAction(${index}, "load")' style="padding: 10px; font-size: 13px; margin:0; width:auto; flex:1;">Load & Edit</button>
+                  <button type="button" class="order-btn" onclick='handleSearchAction(${index}, "convert")' style="padding: 10px; font-size: 13px; margin:0; width:auto; flex:1;">Convert</button>
+                  <button type="button" class="delete-btn" onclick='handleDeleteQuotation("${q.quotation_id}")' style="padding: 10px; font-size: 13px; margin:0; width:auto; background:#e74c3c;">Delete</button>
+                </div>
+              </div>`;
+          });
+        })
+        .withFailureHandler(function(err) {
+          container.innerHTML = "<div style='padding:5px; color:red;'>Error: " + err.toString() + "</div>";
+        })
+        .searchQuotations(query);
+    }
+
+    function handleSearchAction(index, action) {
+      let q = window.tempSearchResults[index];
+      loadQuotationData(q);
+      if (action === 'convert') {
+        setTimeout(showOrderFormSection, 300);
+      }
+    }
+
+    function handleDeleteQuotation(qId) {
+      if (confirm("Are you sure you want to delete quotation " + qId + " from sheet?")) {
+        google.script.run.withSuccessHandler(function(resStr) {
+          let res = JSON.parse(resStr);
+          if (res.status === "success") {
+            alert("Quotation deleted successfully!");
+            document.getElementById('search-results').innerHTML = "";
+          } else {
+            alert("Error deleting quotation.");
+          }
+        }).deleteQuotation(qId);
+      }
+    }
+
+    function loadQuotationData(q) {
+      lastQuotationId = q.quotation_id;
+      document.getElementById('client_name').value = q.client_name || "";
+      document.getElementById('client_mobile').value = q.client_mobile || "";
+      document.getElementById('client_type').value = q.client_type || "Customer";
+      
+      handleClientTypeChange();
+      let clientType = document.getElementById('client_type').value;
+
+      if(clientType === 'Dealer') {
+        document.getElementById('client_gstin').value = q.client_gstin || "";
+        loadedClientGstin = q.client_gstin || "";
+      } else {
+        loadedClientGstin = "";
+      }
+      
+      let stateSelect = document.getElementById('client_state');
+      stateSelect.value = q.client_state || "";
+      updateDistricts();
+      document.getElementById('client_district').value = q.client_district || "";
+
+      let spSelect = document.getElementById('salesperson');
+      spSelect.value = q.salesperson || "";
+      updateSalespersonInfo();
+
+      productsList = [];
+      currentGrandTotal = 0;
+
+      // नीचे वाले कार्ड (Preview Card) को भरने का कोड
+      document.getElementById('res_id').innerText = q.quotation_id;
+      document.getElementById('res_date').innerText = q.date ? new Date(q.date).toLocaleDateString('en-GB') : new Date().toLocaleDateString('en-GB');
+      document.getElementById('res_sp_name').innerText = q.salesperson || "";
+      document.getElementById('res_sp_phone').innerText = document.getElementById('salesperson_mobile').value;
+      document.getElementById('res_sp_email').innerText = document.getElementById('salesperson_email').value;
+
+      document.getElementById('res_client_name').innerText = q.client_name || "";
+      document.getElementById('res_client_type').innerText = clientType;
+
+      if(clientType === 'Dealer' && q.client_gstin) {
+        document.getElementById('res_gstin_row').style.display = 'block';
+        document.getElementById('res_client_gstin').innerText = q.client_gstin;
+      } else {
+        document.getElementById('res_gstin_row').style.display = 'none';
+      }
+
+      document.getElementById('res_client_mobile').innerText = q.client_mobile || "";
+      document.getElementById('res_client_location').innerText = (q.client_district || "") + ", " + (q.client_state || "");
+
+      let resTableBody = document.querySelector("#res_product_table tbody");
+      resTableBody.innerHTML = "";
+
+      if(q.items && q.items.length > 0) {
+        q.items.forEach(item => {
+          let pObj = globalData.products.find(p => (p.Product_ID || p.ProductID) === item.product_id);
+          let pName = pObj ? (pObj.Product_Name || pObj.ProductName) : item.product_id;
+          let itemTotal = parseFloat(item.total_price) || 0;
+          let qty = parseInt(item.quantity) || 1;
+
+          let unitPrice = 0;
+          if (pObj) {
+            unitPrice = (clientType === 'Dealer') ? parseFloat(pObj.NDP) : parseFloat(pObj.MRP);
+            if (isNaN(unitPrice)) unitPrice = itemTotal / qty;
+          } else {
+            unitPrice = itemTotal / qty;
+          }
+
+          let itemInc = calculateItemIncentive(itemTotal, qty, unitPrice);
+
+          productsList.push({ 
+            product_id: item.product_id, 
+            product_name: pName, 
+            quantity: qty, 
+            total_price: itemTotal,
+            incentive_amount: itemInc
+          });
+          currentGrandTotal += itemTotal;
+
+          resTableBody.innerHTML += `<tr><td>${pName}</td><td>${qty}</td><td>₹ ${itemTotal}</td></tr>`;
+        });
+      }
+
+      document.getElementById('res_grand_total').innerText = currentGrandTotal;
+
+      let termsContainer = document.getElementById('res_terms');
+      termsContainer.innerText = "Standard 1 Year Manufacturer Warranty.";
+
+      updateProductTableUI();
+      updateTotalQuotationIncentiveUI();
+      
+      document.getElementById('result-box').style.display = 'block';
+      document.getElementById('search-results').innerHTML = `<div style='padding:5px; color:green;'>Quotation loaded successfully!</div>`;
+      window.scrollTo(0, 0);
+    }
+
+    function performOrderSearch() {
+      let query = document.getElementById('order_search_query').value;
+      if(!query) { alert("Please enter something to search order!"); return; }
+      let container = document.getElementById('order-search-results');
+      container.innerHTML = "<div style='padding:5px; color:#555;'>Searching Orders...</div>";
+      
+      google.script.run
+        .withSuccessHandler(function(resStr) {
+          let res = JSON.parse(resStr);
+          container.innerHTML = "";
+          if(!res.results || res.results.length === 0) {
+            container.innerHTML = "<div style='padding:5px; color:red;'>No matching production order found.</div>";
+            return;
+          }
+          window.tempOrderSearchResults = res.results;
+          res.results.forEach((ord, index) => {
+            container.innerHTML += `
+              <div class="result-item">
+                <div><b>Order ID:</b> ${ord.order_id} | <b>Name:</b> ${ord.client_name} (${ord.client_mobile})</div>
+                <div style="display: flex; gap: 8px;">
+                  <button type="button" class="order-btn" onclick='handleOrderSearchAction(${index})' style="padding: 10px; font-size: 13px; margin:0; width:auto; flex:1;">Load & Edit</button>
+                  <button type="button" class="delete-btn" onclick='handleDeleteOrder("${ord.order_id}")' style="padding: 10px; font-size: 13px; margin:0; width:auto; background:#e74c3c;">Delete</button>
+                </div>
+              </div>`;
+          });
+        })
+        .withFailureHandler(function(err) {
+          container.innerHTML = "<div style='padding:5px; color:red;'>Error: " + err.toString() + "</div>";
+        })
+        .searchProductionOrders(query);
+    }
+
+    function handleOrderSearchAction(index) {
+      let ord = window.tempOrderSearchResults[index];
+      document.getElementById('editing_order_id').value = ord.order_id;
+      lastQuotationId = ord.quotation_id;
+      
+      document.getElementById('client_name').value = ord.client_name || "";
+      document.getElementById('client_mobile').value = ord.client_mobile || "";
+      document.getElementById('client_type').value = ord.client_type || "Customer";
+      
+      handleClientTypeChange();
+      let clientType = document.getElementById('client_type').value;
+
+      if(clientType === 'Dealer') {
+        document.getElementById('client_gstin').value = ord.gstin_no || "";
+        document.getElementById('order_gstin').value = ord.gstin_no || "";
+      }
+
+      let stateSelect = document.getElementById('client_state');
+      stateSelect.value = ord.client_state || "";
+      updateDistricts();
+      document.getElementById('client_district').value = ord.client_district || "";
+
+      let spSelect = document.getElementById('salesperson');
+      spSelect.value = ord.salesperson_name || "";
+      updateSalespersonInfo();
+
+      document.getElementById('order_address').value = ord.client_address || "";
+      document.getElementById('order_pincode').value = ord.pin_code || "";
+
+      document.getElementById('order_tractor').value = ord.tractor_rpm || "";
+      document.getElementById('order_booking_date').value = ord.booking_date ? ord.booking_date.split('T')[0] : "";
+      document.getElementById('order_dispatch_date').value = ord.expected_dispatch ? ord.expected_dispatch.split('T')[0] : "";
+      document.getElementById('order_payment_date').value = ord.payment_date ? ord.payment_date.split('T')[0] : "";
+      document.getElementById('order_transport').value = ord.transport_name || "";
+      document.getElementById('order_freight').value = ord.freight_terms || "To-Pay";
+      document.getElementById('order_payment_mode').value = ord.payment_mode || "";
+
+      productsList = [];
+      currentGrandTotal = parseFloat(ord.grand_total) || 0;
+      
+      if (ord.items && ord.items.length > 0) {
+        ord.items.forEach(item => {
+          let pObj = globalData.products.find(p => (p.Product_ID || p.ProductID) === item.product_id);
+          let pName = pObj ? (pObj.Product_Name || pObj.ProductName) : item.product_id;
+          let itemTotal = parseFloat(item.total_price) || 0;
+          let qty = parseInt(item.quantity) || 1;
+
+          let unitPrice = 0;
+          if (pObj) {
+            unitPrice = (clientType === 'Dealer') ? parseFloat(pObj.NDP) : parseFloat(pObj.MRP);
+            if (isNaN(unitPrice)) unitPrice = itemTotal / qty;
+          } else {
+            unitPrice = itemTotal / qty;
+          }
+
+          let itemInc = calculateItemIncentive(itemTotal, qty, unitPrice);
+
+          productsList.push({
+            product_id: item.product_id,
+            product_name: pName,
+            quantity: qty,
+            total_price: itemTotal,
+            incentive_amount: itemInc
+          });
+        });
+      }
+      updateProductTableUI();
+      updateTotalQuotationIncentiveUI();
+
+      showOrderFormSection();
+      document.getElementById('order-search-results').innerHTML = `<div style='padding:5px; color:green;'>Production Order loaded for editing!</div>`;
+    }
+
+    function handleDeleteOrder(orderId) {
+      if (confirm("Are you sure you want to delete order " + orderId + " from sheet?")) {
+        google.script.run.withSuccessHandler(function(resStr) {
+          let res = JSON.parse(resStr);
+          if (res.status === "success") {
+            alert("Production order deleted successfully!");
+            document.getElementById('order-search-results').innerHTML = "";
+          } else {
+            alert("Error deleting order.");
+          }
+        }).deleteProductionOrder(orderId);
+      }
+    }
+
+    function handleFormSubmit(event) {
+      event.preventDefault();
+      if (productsList.length === 0) { alert("Please add at least one product!"); return; }
+      
+      let submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.innerText = "Saving Quotation...";
+      
+      let clientType = document.getElementById('client_type').value;
+      let gstinVal = (clientType === 'Dealer') ? document.getElementById('client_gstin').value : "";
+
+      let formData = {
+        salesperson_name: document.getElementById('salesperson').value,
+        client_type: clientType,
+        client_name: document.getElementById('client_name').value,
+        client_mobile: document.getElementById('client_mobile').value,
+        client_state: document.getElementById('client_state').value,
+        client_district: document.getElementById('client_district').value,
+        client_gstin: gstinVal,
+        items: productsList
+      };
+
+      google.script.run
+        .withSuccessHandler(function(resStr) {
+          submitBtn.disabled = false;
+          submitBtn.innerText = "Generate Quotation & Save";
+          
+          let res = JSON.parse(resStr);
+          if (res.status === "success") {
+            alert("🎉 Congratulations! Quotation generated & saved successfully.\nQuotation ID: " + res.quotation_id);
+
+            lastQuotationId = res.quotation_id;
+            loadedClientGstin = gstinVal;
+            let currentDateStr = new Date().toLocaleDateString('en-GB');
+            document.getElementById('res_id').innerText = lastQuotationId;
+            document.getElementById('res_date').innerText = currentDateStr;
+            
+            document.getElementById('res_sp_name').innerText = formData.salesperson_name;
+            document.getElementById('res_sp_phone').innerText = document.getElementById('salesperson_mobile').value;
+            document.getElementById('res_sp_email').innerText = document.getElementById('salesperson_email').value;
+
+            document.getElementById('res_client_name').innerText = formData.client_name;
+            document.getElementById('res_client_type').innerText = formData.client_type;
+            
+            if(clientType === 'Dealer' && gstinVal) {
+              document.getElementById('res_gstin_row').style.display = 'block';
+              document.getElementById('res_client_gstin').innerText = gstinVal;
+            } else {
+              document.getElementById('res_gstin_row').style.display = 'none';
+            }
+
+            document.getElementById('res_client_mobile').innerText = formData.client_mobile;
+            document.getElementById('res_client_location').innerText = formData.client_district + ", " + formData.client_state;
+
+            let resTableBody = document.querySelector("#res_product_table tbody");
+            resTableBody.innerHTML = "";
+            currentGrandTotal = 0;
+
+            productsList.forEach(item => {
+              currentGrandTotal += parseFloat(item.total_price) || 0;
+              resTableBody.innerHTML += `<tr><td>${item.product_name}</td><td>${item.quantity}</td><td>₹ ${item.total_price}</td></tr>`;
+            });
+
+            document.getElementById('res_grand_total').innerText = currentGrandTotal;
+
+            let termsContainer = document.getElementById('res_terms');
+            termsContainer.innerHTML = "";
+            if (res.product_terms && res.product_terms.length > 0) {
+              res.product_terms.forEach(item => {
+                let pObj = globalData.products.find(p => (p.Product_ID || p.ProductID) === item.product_id);
+                let pName = pObj ? (pObj.Product_Name || pObj.ProductName) : item.product_id;
+                termsContainer.innerHTML += `<div style="margin-bottom:6px;"><b>${pName}:</b> ${item.terms}</div>`;
+              });
+            } else {
+              termsContainer.innerText = "Standard 1 Year Manufacturer Warranty.";
+            }
+            
+            document.getElementById('result-box').style.display = 'block';
+            window.scrollTo(0, document.body.scrollHeight);
+
+            html2canvas(document.getElementById('quotationCard'), { scale: 2, useCORS: true }).then(function(canvas) {
+              let link = document.createElement('a');
+              link.download = lastQuotationId + '_Quotation.jpg';
+              link.href = canvas.toDataURL('image/jpeg', 0.95);
+              link.click();
+            });
+          }
+        })
+        .withFailureHandler(function(err) {
+          submitBtn.disabled = false;
+          submitBtn.innerText = "Generate Quotation & Save";
+          alert("Error: " + err.toString());
+        })
+        .saveQuotationAndGetTerms(JSON.stringify(formData));
+    }
+
+    function shareOnWhatsApp() {
+      let clientName = document.getElementById('client_name').value;
+      let text = `नमस्ते ${clientName} जी! 🌾\n\nआपकी रिक्वायरमेंट के अनुसार Vasundhara Krishi Yantra का आधिकारिक कोटेशन (${lastQuotationId}) तैयार है।\n\n💰 कोटेशन वैल्यू: ₹${currentGrandTotal}\n\nखेती को बनाएं और भी आधुनिक और आसान हमारे भरोसेमंद कृषि यंत्रों के साथ! किसी भी सहायता के लिए संपर्क करें।\n\nधन्यवाद! 🙏`;
+      
+      window.open(`https://wa.me/?text=` + encodeURIComponent(text), '_blank');
+    }
+
+    function showOrderFormSection() {
+      let clientType = document.getElementById('client_type').value;
+      let orderGstinGroup = document.getElementById('order_gstin_group');
+      let orderGstinInput = document.getElementById('order_gstin');
+
+      if (clientType === 'Dealer') {
+        orderGstinGroup.style.display = 'block';
+        orderGstinInput.required = true;
+        orderGstinInput.value = loadedClientGstin || document.getElementById('client_gstin').value;
+      } else {
+        orderGstinGroup.style.display = 'none';
+        orderGstinInput.required = false;
+        orderGstinInput.value = "";
+      }
+
+      calculateRemainingAmount();
+      document.getElementById('order-section').style.display = 'block';
+      window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    function generateProductionOrder(event) {
+      event.preventDefault();
+      
+      let orderSubmitBtn = document.getElementById('orderSubmitBtn');
+      orderSubmitBtn.disabled = true;
+      orderSubmitBtn.innerText = "Saving Production Order...";
+
+      let clientType = document.getElementById('client_type').value;
+      let gstinVal = (clientType === 'Dealer') ? document.getElementById('order_gstin').value : "";
+      let addressVal = document.getElementById('order_address').value;
+      let pincodeVal = document.getElementById('order_pincode').value;
+      let existingOrdId = document.getElementById('editing_order_id').value;
+      
+      let payMode = document.getElementById('order_payment_mode').value;
+      let finalPaymentMode = (payMode === 'Other') ? document.getElementById('order_other_payment').value : payMode;
+      let advanceVal = document.getElementById('order_advance').value;
+      let remainingVal = document.getElementById('order_remaining').value;
+
+      // 🟢 यदि किसी वजह से कुल इंसेंटिव शून्य हो, तो यह आर्डर सेव होने से पहले खुद री-कैलकुलेट कर लेगा
+      if (!totalQuotationIncentiveAmount || totalQuotationIncentiveAmount === 0) {
+        let recalcTotal = 0;
+        productsList.forEach(item => {
+          if (!item.incentive_amount) {
+            let pObj = globalData.products.find(p => (p.Product_ID || p.ProductID) === item.product_id);
+            let uPrice = pObj ? ((clientType === 'Dealer') ? parseFloat(pObj.NDP) : parseFloat(pObj.MRP)) : (item.total_price / item.quantity);
+            item.incentive_amount = calculateItemIncentive(item.total_price, item.quantity, uPrice);
+          }
+          recalcTotal += item.incentive_amount;
+        });
+        totalQuotationIncentiveAmount = recalcTotal;
+      }
+
+      let orderData = {
+        order_id: existingOrdId || "",
+        quotation_id: lastQuotationId,
+        salesperson_name: document.getElementById('salesperson').value,
+        client_type: clientType,
+        client_name: document.getElementById('client_name').value,
+        client_mobile: document.getElementById('client_mobile').value,
+        client_state: document.getElementById('client_state').value,
+        client_district: document.getElementById('client_district').value,
+        items: productsList,
+        grand_total: currentGrandTotal,
+        gstin_no: gstinVal,
+        client_address: addressVal,
+        pin_code: pincodeVal,
+        tractor_rpm: document.getElementById('order_tractor').value,
+        booking_date: document.getElementById('order_booking_date').value,
+        expected_dispatch: document.getElementById('order_dispatch_date').value,
+        advance_amount: advanceVal + " (Remaining Balance: ₹" + remainingVal + ")",
+        payment_date: document.getElementById('order_payment_date').value,
+        payment_mode: finalPaymentMode,
+        transport_name: document.getElementById('order_transport').value,
+        freight_terms: document.getElementById('order_freight').value,
+        incentive_total: totalQuotationIncentiveAmount // 🟢 सही इंसेंटिव अमाउंट अब बैकएंड में चला जाएगा
+      };
+
+      google.script.run
+        .withSuccessHandler(function(resStr) {
+          orderSubmitBtn.disabled = false;
+          orderSubmitBtn.innerText = "Generate & Save Production Order";
+
+          let res = JSON.parse(resStr);
+          if (res.status === "success") {
+            alert("🎉 Congratulations! Production Order generated & saved successfully.\nOrder ID: " + res.order_id);
+
+            document.getElementById('ord_id').innerText = res.order_id;
+            document.getElementById('ord_booking_date_res').innerText = orderData.booking_date;
+            document.getElementById('ord_client_name').innerText = orderData.client_name;
+            
+            if (clientType === 'Dealer' && gstinVal) {
+              document.getElementById('ord_gstin_container').style.display = 'inline';
+              document.getElementById('ord_gstin_res').innerText = gstinVal;
+            } else {
+              document.getElementById('ord_gstin_container').style.display = 'none';
+            }
+
+            document.getElementById('ord_address_res').innerText = addressVal;
+            document.getElementById('ord_pincode_res').innerText = pincodeVal;
+            document.getElementById('ord_mobile_res').innerText = orderData.client_mobile;
+            document.getElementById('ord_sp_res').innerText = orderData.salesperson_name;
+            document.getElementById('ord_tractor_res').innerText = orderData.tractor_rpm;
+            document.getElementById('ord_dispatch_res').innerText = orderData.expected_dispatch;
+            
+            document.getElementById('ord_total_val_res').innerText = currentGrandTotal;
+            document.getElementById('ord_advance_res').innerText = advanceVal;
+            document.getElementById('ord_remaining_res').innerText = remainingVal;
+
+            document.getElementById('ord_pay_date_res').innerText = orderData.payment_date;
+            document.getElementById('ord_pay_mode_res').innerText = finalPaymentMode;
+            document.getElementById('ord_transport_res').innerText = orderData.transport_name;
+            document.getElementById('ord_freight_res').innerText = orderData.freight_terms;
+
+            let ordTableBody = document.querySelector("#ord_product_table tbody");
+            ordTableBody.innerHTML = "";
+            productsList.forEach(item => {
+              ordTableBody.innerHTML += `<tr><td>${item.product_name}</td><td>${item.quantity}</td></tr>`;
+            });
+
+            document.getElementById('final-order-box').style.display = 'block';
+            window.scrollTo(0, document.body.scrollHeight);
+
+            html2canvas(document.getElementById('productionOrderCard'), { scale: 2, useCORS: true }).then(function(canvas) {
+              let link = document.createElement('a');
+              link.download = res.order_id + '_ProductionOrder.jpg';
+              link.href = canvas.toDataURL('image/jpeg', 0.95);
+              link.click();
+            });
+          } else {
+            alert("Error: " + res.message);
+          }
+        })
+        .withFailureHandler(function(err) {
+          orderSubmitBtn.disabled = false;
+          orderSubmitBtn.innerText = "Generate & Save Production Order";
+          alert("Error: " + err.toString());
+        })
+        .saveProductionOrder(JSON.stringify(orderData));
+    }
+
+    function shareOrderOnWhatsApp() {
+      let clientName = document.getElementById('client_name').value;
+      let text = `Production Order for ${clientName} has been generated successfully and saved in the factory records!`;
+      window.open(`https://wa.me/?text=` + encodeURIComponent(text), '_blank');
+    }
+    
+    // यह कोड मोबाइल पर खुलते ही लेआउट को स्क्रीन के हिसाब से बिल्कुल फिट कर देगा
+    window.addEventListener('DOMContentLoaded', (event) => {
+      let viewportMeta = document.querySelector('meta[name="viewport"]');
+      if (viewportMeta) {
+        viewportMeta.content = "width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=yes";
+      }
+    });
+  </script>
+</body>
+</html>
+
