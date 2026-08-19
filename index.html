@@ -468,72 +468,41 @@
     };
 
 function initAppWithRetry() {
-    fetch('https://script.google.com/macros/s/AKfycbzzXHuRYztyLdKk-sGUKyE0rHTHbHLwmRQiFr93r0PmeF3ZTfFjdhas0StCkz1yFYz1/exec', {
-        redirect: "follow"
-    })
-    .then(response => response.json())
-    .then(res => {
-        if (!res || res.status !== "success") {
-            console.error("Data error:", res);
-            setTimeout(initAppWithRetry, 3000);
-            return;
-        }
-        
-        globalData = res;
-        
-        let spSelect = document.getElementById('salesperson');
-        if (spSelect) {
-            spSelect.innerHTML = '<option value="">-- Select Your Name --</option>';
-            if (res.salespersons && res.salespersons.length > 0) {
-                res.salespersons.forEach(sp => {
-                    let name = sp.Salesperson_Name || sp.Name || "";
-                    let num = sp.Salesperson_Number || sp.Phone || "";
-                    let email = sp.Salesperson_Email || sp.Email || "";
-                    if (name) {
-                        spSelect.innerHTML += `<option value="${name}" data-phone="${num}" data-email="${email}">${name}</option>`;
-                    }
-                });
-            }
-        }
-    })
-    .catch(err => {
-        console.error("Fetch error:", err);
-        setTimeout(initAppWithRetry, 3000);
-    });
-}
+    const url = 'https://script.google.com/macros/s/AKfycbzzXHuRYztyLdKk-sGUKyE0rHTHbHLwmRQiFr93r0PmeF3ZTfFjdhas0StCkz1yFYz1/exec?callback=handleData';
     
-        })
-        .catch(err => {
-            console.error("Fetch error:", err);
-            setTimeout(initAppWithRetry, 3000);
-        });
+    const script = document.createElement('script');
+    script.src = url;
+    script.onerror = function() {
+        console.error("Failed to load data, retrying...");
+        setTimeout(initAppWithRetry, 3000);
+    };
+    document.body.appendChild(script);
 }
-          let res;
-          try {
-            res = JSON.parse(resStr);
-          } catch (e) {
-            setTimeout(initAppWithRetry, 3000);
-            return;
-          }
 
-          if (!res || res.status !== "success") {
-            setTimeout(initAppWithRetry, 2000);
-            return;
-          }
-          globalData = res;
-          
-          let spSelect = document.getElementById('salesperson');
-          spSelect.innerHTML = '<option value="">-- Select Your Name --</option>';
-          if(res.salespersons && res.salespersons.length > 0) {
+function handleData(res) {
+    if (!res || res.status !== "success") {
+        console.error("Data error:", res);
+        setTimeout(initAppWithRetry, 3000);
+        return;
+    }
+    
+    globalData = res;
+    
+    let spSelect = document.getElementById('salesperson');
+    if (spSelect) {
+        spSelect.innerHTML = '<option value="">-- Select Your Name --</option>';
+        if (res.salespersons && res.salespersons.length > 0) {
             res.salespersons.forEach(sp => {
-              let name = sp.Salesperson_Name || sp.Name || "";
-              let num = sp.Salesperson_Number || sp.Phone || "";
-              let email = sp.Salesperson_Email || sp.Email || "";
-              if(name) {
-                spSelect.innerHTML += `<option value="${name}" data-phone="${num}" data-email="${email}">${name}</option>`;
-              }
+                let name = sp.Salesperson_Name || sp.Name || "";
+                let num = sp.Salesperson_Number || sp.Phone || "";
+                let email = sp.Salesperson_Email || sp.Email || "";
+                if (name) {
+                    spSelect.innerHTML += `<option value="${name}" data-phone="${num}" data-email="${email}">${name}</option>`;
+                }
             });
-          }
+        }
+    }
+}
 
           let mainCatSelect = document.getElementById('main_category');
           mainCatSelect.innerHTML = '<option value="">-- Select Main Category --</option>';
