@@ -518,11 +518,7 @@ function handleData(res) {
               mainCatSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
             });
           }
-        })
-        .withFailureHandler(function(err) {
-          setTimeout(initAppWithRetry, 2000);
-        })
-        .getAppData();
+        
     }
 
     function updateSalespersonInfo() {
