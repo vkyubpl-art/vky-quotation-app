@@ -467,29 +467,22 @@
       initAppWithRetry();
     };
 
-    function initAppWithRetry() {
-    fetch('https://script.google.com/macros/s/AKfycbzzXHuRYztyLdKk-sGUKyE0rHTHbHLwmRQiFr93r0PmeF3ZTfFjdhas0StCkz1yFYz1/exec')
-        .then(response => response.text())
-        .then(resStr => {
-            if (!resStr || resStr.trim().startsWith("<")) {
-                setTimeout(initAppWithRetry, 3000);
-                return;
-            }
-            let res;
-            try {
-                res = JSON.parse(resStr);
-            } catch (e) {
-                setTimeout(initAppWithRetry, 3000);
-                return;
-            }
-            
-            if (!res || res.status !== "success") {
-                setTimeout(initAppWithRetry, 2000);
-                return;
-            }
-            globalData = res;
-            
-            let spSelect = document.getElementById('salesperson');
+function initAppWithRetry() {
+    fetch('https://script.google.com/macros/s/AKfycbzzXHuRYztyLdKk-sGUKyE0rHTHbHLwmRQiFr93r0PmeF3ZTfFjdhas0StCkz1yFYz1/exec', {
+        redirect: "follow"
+    })
+    .then(response => response.json())
+    .then(res => {
+        if (!res || res.status !== "success") {
+            console.error("Data error:", res);
+            setTimeout(initAppWithRetry, 3000);
+            return;
+        }
+        
+        globalData = res;
+        
+        let spSelect = document.getElementById('salesperson');
+        if (spSelect) {
             spSelect.innerHTML = '<option value="">-- Select Your Name --</option>';
             if (res.salespersons && res.salespersons.length > 0) {
                 res.salespersons.forEach(sp => {
@@ -501,6 +494,14 @@
                     }
                 });
             }
+        }
+    })
+    .catch(err => {
+        console.error("Fetch error:", err);
+        setTimeout(initAppWithRetry, 3000);
+    });
+}
+    
         })
         .catch(err => {
             console.error("Fetch error:", err);
